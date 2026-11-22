@@ -16,3 +16,8 @@
 .externalNativeBuild
 .cxx
 google-services.json
+
+# Web app (Vite + TypeScript)
+web/node_modules/
+web/dist/
+

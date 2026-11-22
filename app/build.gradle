@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "app.olauncher"
+        applicationId "com.mine.progresslauncher"
         minSdkVersion 24
         targetSdkVersion 36
         versionCode 117
@@ -67,6 +67,9 @@ dependencies {
 
     //Material dependency
     implementation libs.material
+
+    //WebView
+    implementation libs.androidx.webkit
 
     testImplementation libs.junit
 }

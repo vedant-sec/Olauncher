@@ -1,43 +1,77 @@
-![Olauncher](https://repository-images.githubusercontent.com/278638069/db0acb80-661b-11eb-803e-926cae5dccb4)
+# Progress Mirror Launcher
 
+A single monorepo containing:
 
-# Olauncher | Minimal AF Launcher
-AF stands for Ad-Free! :D
+- **`web/`** — Progress Mirror, a Vite + TypeScript Canvas 2D web app (IndexedDB/localStorage, PWA, JSON export/import) that visualizes goals and actions as a “Then vs Now” map.
+- **Android launcher** — a fork of [Olauncher](https://github.com/tanujnotes/Olauncher) (Kotlin, Android) that embeds the web app in a full-screen WebView as the home screen.
 
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-    alt="Get it on Play Store"
-    height="80" align="middle">](https://play.google.com/store/apps/details?id=app.olauncher)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80" align="middle">](https://f-droid.org/packages/app.olauncher)
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png"
-    alt="Get it on IzzyOnDroid"
-    height="54" hspace="13" align="middle">](https://apt.izzysoft.de/packages/app.olauncher)
+> Screenshot placeholder: add `docs/screenshot.png` and replace this line with `![Progress Mirror](docs/screenshot.png)`.
 
-#### Install using [Play Store,](https://play.google.com/store/apps/details?id=app.olauncher) [F-Droid,](https://f-droid.org/packages/app.olauncher) [IzzyOnDroid](https://apt.izzysoft.de/packages/app.olauncher) or the [latest APK.](https://github.com/tanujnotes/Olauncher/releases/)
+## Credits & License
 
-To maintain the simplicity of the launcher, a few niche features are available but hidden.
+This project is a fork of **[Olauncher](https://github.com/tanujnotes/Olauncher)** by [@tanujnotes](https://github.com/tanujnotes). Original Olauncher credit and GPL license are preserved.
 
-Please check out the **[About](https://tanujnotes.substack.com/p/olauncher-minimal-af-launcher?utm_source=github)** page in the Olauncher settings for a complete list of features and **FAQs**.
+**The whole repo is GPLv3.** See [LICENSE](./LICENSE).
 
-##
+## Project structure
 
-License: [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+```text
+.
+├── app/                  # Android launcher (Kotlin)
+│   └── src/main/assets/mirror/   # Built web app (committed)
+├── web/                  # Progress Mirror web app (Vite + TypeScript)
+├── scripts/
+│   └── build-web.sh      # Build web app into Android assets
+├── build.gradle
+└── README.md
+```
 
-Developer: [@tanujnotes](https://x.com/tanujnotes)
+## Run the web app on its own
 
-##
+Requirements: **Node.js 18+** (Vite 5 requires Node 18, 20, or 22+; Node 20+ recommended) and npm.
 
-### Other apps from team Olauncher:
+```bash
+cd web
+npm install
+npm run dev
+```
 
-- [Pro Launcher](https://play.google.com/store/apps/details?id=app.prolauncher) - Pro version of Olauncher with extra features like widgets, weather, folders, etc.
+Vite will print a local URL (usually `http://localhost:5173`). For the launcher-embedded mode, open `http://localhost:5173/?launcher=1`.
 
-- [Note to Self](https://play.google.com/store/apps/details?id=com.makenotetoself) - Free and [open source](https://github.com/jeerovan/ntsapp) notes app with chat like interface and end-to-end encryption.
+## Build the Android launcher
 
-- [Pentastic](https://play.google.com/store/apps/details?id=app.pentastic) - Free and [open source](https://github.com/tanujnotes/Pentastic). A minimal tasks, notes and reminders app.
+Requirements: Android Studio (with Android SDK) or JDK + Android SDK command-line tools.
 
-- [Supernova](https://github.com/tanujnotes/Supernova) - Free and [open source](https://github.com/tanujnotes/Supernova) alternative of Nova Launcher.
+- **Android Studio:** open the repo root, let Gradle sync, then Run.
+- **Command line:**
 
-##
+```bash
+./gradlew assembleDebug
+```
 
-Thank you!
+If `ANDROID_HOME` / `ANDROID_SDK_ROOT` is not set, configure the Android SDK first (Android Studio usually handles this).
+
+## Rebuild after changing the web app
+
+The Android app serves the built web files from `app/src/main/assets/mirror/`. After changing anything in `web/`:
+
+```bash
+scripts/build-web.sh
+./gradlew assembleDebug
+```
+
+`scripts/build-web.sh` runs `npm install` and `npm run build` inside `web/`. The Vite build writes directly to `app/src/main/assets/mirror/` (see `web/vite.config.ts`).
+
+## Set as the default home app
+
+1. Install the debug/release APK on your Android device.
+2. Press Home or go to **Settings > Apps > Default apps > Home app** (path varies by device).
+3. Select this launcher as the default Home app.
+4. Press Home to open Progress Mirror.
+
+To get back to the previous launcher, change the default Home app in Android settings.
+
+## Notes
+
+- `web/node_modules/` and `web/dist/` are ignored; `app/src/main/assets/mirror/` is committed so Android can build without Node.
+- `web/package-lock.json` is committed for reproducible installs.

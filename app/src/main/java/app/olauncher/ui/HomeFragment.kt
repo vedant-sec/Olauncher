@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -19,6 +20,8 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.lifecycle.Observer
@@ -40,6 +43,7 @@ import app.olauncher.helper.openAlarmApp
 import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
+import app.olauncher.helper.ProgressMirrorWebView
 import app.olauncher.helper.setPlainWallpaperByTheme
 import app.olauncher.helper.showToast
 import app.olauncher.listener.OnSwipeTouchListener
@@ -53,6 +57,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
     private lateinit var deviceManager: DevicePolicyManager
+
+    private var mirrorWebView: ProgressMirrorWebView? = null
+
+    private var mirrorOverlay: View? = null
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -75,14 +83,21 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         setHomeAlignment(prefs.homeAlignment)
         initSwipeTouchListener()
         initClickListeners()
+        setupMirrorWebView()
     }
 
     override fun onResume() {
         super.onResume()
+        mirrorWebView?.webView?.resumeTimers()
         populateHomeScreen(false)
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mirrorWebView?.webView?.pauseTimers()
     }
 
     override fun onClick(view: View) {
@@ -192,7 +207,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 setHomeAlignment()
             }
             if (binding.firstRunTips.isVisible) return@Observer
-            binding.setDefaultLauncher.isVisible = it.not() && prefs.hideSetDefaultLauncher.not()
+            // The home screen is a WebView-only; the set-default hint is not displayed here
+            binding.setDefaultLauncher.isVisible = false
         })
         viewModel.homeAppAlignment.observe(viewLifecycleOwner) {
             setHomeAlignment(it)
@@ -269,9 +285,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun populateDateTime() {
-        binding.dateTimeLayout.isVisible = prefs.dateTimeVisibility != Constants.DateTime.OFF
-        binding.clock.isVisible = Constants.DateTime.isTimeVisible(prefs.dateTimeVisibility)
-        binding.date.isVisible = Constants.DateTime.isDateVisible(prefs.dateTimeVisibility)
+        // The home screen is a full-screen WebView; no native date/time content is displayed
+        binding.dateTimeLayout.visibility = View.GONE
+        binding.clock.visibility = View.GONE
+        binding.date.visibility = View.GONE
 
 //        var dateText = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
         val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
@@ -291,7 +308,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         if (requireContext().appUsagePermissionGranted().not()) return
 
         viewModel.getTodaysScreenTime()
-        binding.tvScreenTime.visibility = View.VISIBLE
+        binding.tvScreenTime.visibility = View.GONE
 
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val horizontalMargin = if (isLandscape) 64.dpToPx() else 10.dpToPx()
@@ -377,6 +394,9 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             prefs.appName8 = ""
             prefs.appPackage8 = ""
         }
+
+        // The home screen is a full-screen WebView; no native home content is displayed
+        hideNativeHomeContent()
     }
 
     private fun setHomeAppText(
@@ -434,6 +454,18 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.homeApp6.visibility = View.GONE
         binding.homeApp7.visibility = View.GONE
         binding.homeApp8.visibility = View.GONE
+    }
+
+    private fun hideNativeHomeContent() {
+        // The home screen is a full-screen WebView; nothing native is displayed on top of it
+        binding.dateTimeLayout.visibility = View.GONE
+        binding.clock.visibility = View.GONE
+        binding.date.visibility = View.GONE
+        binding.tvScreenTime.visibility = View.GONE
+        binding.homeAppsLayout.visibility = View.GONE
+        hideHomeApps()
+        binding.firstRunTips.visibility = View.GONE
+        binding.setDefaultLauncher.visibility = View.GONE
     }
 
     private fun launchAppOrShortcut(
@@ -672,11 +704,17 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             override fun onDoubleClick() {
                 super.onDoubleClick()
-                if (!prefs.lockModeOn) return
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    binding.lock.performClick()
-                else
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val am = requireContext().getSystemService(Context.ACCESSIBILITY_SERVICE) as? android.view.accessibility.AccessibilityManager
+                    val isEnabled = am?.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK)?.any {
+                        it.resolveInfo.serviceInfo.name == app.olauncher.helper.MyAccessibilityService::class.java.name
+                    } == true
+                    if (isEnabled) {
+                        binding.lock.performClick()
+                    }
+                } else {
                     lockPhone()
+                }
             }
 
             override fun onClick() {
@@ -720,8 +758,55 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    private fun setupMirrorWebView() {
+        val progressMirrorWebView = mirrorWebView ?: ProgressMirrorWebView(requireContext()).also { mirrorWebView = it }
+        if (progressMirrorWebView.webView.parent != null) return
+        binding.mainLayout.addView(
+            progressMirrorWebView.webView,
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        )
+        addMirrorOverlay()
+    }
+
+    private fun addMirrorOverlay() {
+        val overlay = View(requireContext()).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                (resources.displayMetrics.heightPixels * 0.15f).toInt()
+            ).apply { gravity = Gravity.BOTTOM }
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+        overlay.setOnTouchListener(getSwipeGestureListener(requireContext()))
+        binding.mainLayout.addView(overlay)
+        mirrorOverlay = overlay
+        // Hide the swipe-up strip while the soft keyboard is visible so it never covers the input
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainLayout) { _, insets ->
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            mirrorOverlay?.visibility = if (imeVisible) View.GONE else View.VISIBLE
+            insets
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        mirrorWebView?.webView?.let { binding.mainLayout.removeView(it) }
+        mirrorOverlay?.let { binding.mainLayout.removeView(it) }
+        mirrorOverlay = null
         _binding = null
+    }
+
+    internal fun handleWebBackPressed(): Boolean {
+        val progressMirrorWebView = mirrorWebView ?: return false
+        val url = progressMirrorWebView.webView.url.orEmpty()
+        if (url.contains("#/mirror")) {
+            progressMirrorWebView.webView.evaluateJavascript("location.hash='#/';", null)
+            return true
+        }
+        return if (progressMirrorWebView.webView.canGoBack()) {
+            progressMirrorWebView.webView.goBack()
+            true
+        } else {
+            false
+        }
     }
 }

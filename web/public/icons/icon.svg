@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="68%">
+      <stop offset="0" stop-color="#1a2238"/>
+      <stop offset="0.55" stop-color="#0b0e17"/>
+      <stop offset="1" stop-color="#06070c"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="2"/>
+
+  <!-- links -->
+  <g stroke-width="2" stroke-opacity="0.22" fill="none">
+    <path stroke="hsl(210, 75%, 65%)" d="M226 226 Q200 170 256 96"/>
+    <path stroke="hsl(350, 75%, 65%)" d="M286 228 Q360 190 390 180"/>
+    <path stroke="hsl(140, 75%, 65%)" d="M292 280 Q360 320 380 350"/>
+    <path stroke="hsl(45, 75%, 65%)" d="M258 286 Q258 360 256 416"/>
+    <path stroke="hsl(280, 75%, 65%)" d="M226 282 Q140 320 134 350"/>
+    <path stroke="hsl(180, 75%, 65%)" d="M228 224 Q150 190 120 180"/>
+  </g>
+
+  <!-- goals -->
+  <g>
+    <circle cx="256" cy="96" r="22" fill="hsl(210, 62%, 48%)"/>
+    <circle cx="256" cy="96" r="22" fill="none" stroke="hsl(210, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+    <circle cx="390" cy="180" r="18" fill="hsl(350, 62%, 48%)"/>
+    <circle cx="390" cy="180" r="18" fill="none" stroke="hsl(350, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+    <circle cx="380" cy="350" r="20" fill="hsl(140, 62%, 48%)"/>
+    <circle cx="380" cy="350" r="20" fill="none" stroke="hsl(140, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+    <circle cx="256" cy="416" r="16" fill="hsl(45, 62%, 48%)"/>
+    <circle cx="256" cy="416" r="16" fill="none" stroke="hsl(45, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+    <circle cx="134" cy="350" r="19" fill="hsl(280, 62%, 48%)"/>
+    <circle cx="134" cy="350" r="19" fill="none" stroke="hsl(280, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+    <circle cx="120" cy="180" r="17" fill="hsl(180, 62%, 48%)"/>
+    <circle cx="120" cy="180" r="17" fill="none" stroke="hsl(180, 85%, 78%)" stroke-opacity="0.7" stroke-width="2"/>
+  </g>
+
+  <!-- bright action dots -->
+  <g>
+    <circle cx="226" cy="226" r="7" fill="#ffffff"/>
+    <circle cx="226" cy="226" r="16" fill="#ffffff" fill-opacity="0.16"/>
+    <circle cx="286" cy="228" r="6" fill="#ffffff"/>
+    <circle cx="286" cy="228" r="14" fill="#ffffff" fill-opacity="0.16"/>
+    <circle cx="292" cy="280" r="6" fill="#ffffff"/>
+    <circle cx="292" cy="280" r="14" fill="#ffffff" fill-opacity="0.16"/>
+    <circle cx="258" cy="286" r="5" fill="#ffffff"/>
+    <circle cx="258" cy="286" r="13" fill="#ffffff" fill-opacity="0.16"/>
+    <circle cx="226" cy="282" r="6" fill="#ffffff"/>
+    <circle cx="226" cy="282" r="14" fill="#ffffff" fill-opacity="0.16"/>
+    <circle cx="228" cy="224" r="5" fill="#ffffff"/>
+    <circle cx="228" cy="224" r="13" fill="#ffffff" fill-opacity="0.16"/>
+  </g>
+
+  <!-- center -->
+  <circle cx="256" cy="256" r="11" fill="#ffffff"/>
+  <circle cx="256" cy="256" r="20" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="2"/>
+</svg>

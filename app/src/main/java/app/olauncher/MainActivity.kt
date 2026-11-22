@@ -44,6 +44,7 @@ import app.olauncher.helper.shareApp
 import app.olauncher.helper.showLauncherSelector
 import app.olauncher.helper.showMessageDialog
 import app.olauncher.helper.showToast
+import app.olauncher.ui.HomeFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,6 +89,11 @@ class MainActivity : AppCompatActivity() {
 
         val onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // WebView back stack first on the home screen; otherwise fall through to nav
+                if (navController.currentDestination?.id == R.id.mainFragment) {
+                    val homeFragment = supportFragmentManager.findFragmentById(R.id.mainFragment) as? HomeFragment
+                    if (homeFragment?.handleWebBackPressed() == true) return
+                }
                 // Back never leaves the home screen; elsewhere it pops the nav stack
                 if (navController.currentDestination?.id != R.id.mainFragment)
                     navController.popBackStack()
